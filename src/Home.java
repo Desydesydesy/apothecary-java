@@ -28,6 +28,10 @@ public class Home extends javax.swing.JFrame {
         resources.addItem("Deliveries");
         resources.addItem("Receipts");        
         
+        initializeUsers();
+    }
+    
+    public void initializeUsers() {
         try {            
             var result = db
                     .table("employees")
