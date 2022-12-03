@@ -19,20 +19,17 @@ public class Home extends javax.swing.JFrame {
      * Creates new form NewJFrame
      */
     public Home() {
-        initComponents();
-        
         db = new SQL("database.db");
+        initComponents();
         
         resources.addItem("Employees");
         resources.addItem("Products");
         resources.addItem("Deliveries");
-        resources.addItem("Receipts");        
-        
-        initializeUsers();
+        resources.addItem("Receipts");
     }
     
-    public void initializeUsers() {
-        try {            
+    public void loadEmployees() {
+        try {
             var result = db
                     .table("employees")
                     .get();
@@ -48,6 +45,78 @@ public class Home extends javax.swing.JFrame {
                         result.getString("first_name"),
                         result.getString("last_name"),
                         result.getString("address")
+                });
+            }
+            
+            table.setModel(model);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    public void loadProducts() {
+        try {            
+            var result = db
+                    .table("products")
+                    .leftJoin(
+                            "discounts", 
+                            "products.id", 
+                            "=", 
+                            "discounts.product_id"
+                    )
+                    .get();
+            
+            model = new DefaultTableModel();
+            
+            model.addColumn("Име");
+            model.addColumn("Цена");
+            model.addColumn("Отстъпка");
+            model.addColumn("Количество");
+            model.addColumn("Дата на изтичане");
+            
+            while (result.next()) {
+                model.addRow(new Object[] {
+                        result.getString("name"),
+                        result.getString("price"),
+                        result.getString("discount"),
+                        result.getString("quantity"),
+                        result.getString("expires_at"),
+                });
+            }
+            
+            table.setModel(model);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    public void loadDeliveries() {
+        try {            
+            var result = db
+                    .table("deliveries")
+                    .leftJoin(
+                            "discounts", 
+                            "products.id", 
+                            "=", 
+                            "discounts.product_id"
+                    )
+                    .get();
+            
+            model = new DefaultTableModel();
+            
+            model.addColumn("Име");
+            model.addColumn("Цена");
+            model.addColumn("Отстъпка");
+            model.addColumn("Количество");
+            model.addColumn("Дата на изтичане");
+            
+            while (result.next()) {
+                model.addRow(new Object[] {
+                        result.getString("name"),
+                        result.getString("price"),
+                        result.getString("discount"),
+                        result.getString("quantity"),
+                        result.getString("expires_at"),
                 });
             }
             
@@ -97,6 +166,12 @@ public class Home extends javax.swing.JFrame {
         table.setMinimumSize(new java.awt.Dimension(120, 200));
         jScrollPane1.setViewportView(table);
 
+        resources.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                resourcesActionPerformed(evt);
+            }
+        });
+
         jLabel1.setText("Ресурс");
 
         jLabel2.setText("Търсене");
@@ -140,6 +215,17 @@ public class Home extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void resourcesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resourcesActionPerformed
+        switch ((String) resources.getSelectedItem()) {
+            case "Employees":
+                loadEmployees();
+                break;
+            case "Products":
+                loadProducts();
+                break;
+        }
+    }//GEN-LAST:event_resourcesActionPerformed
 
     /**
      * @param args the command line arguments

@@ -20,6 +20,7 @@ public class SQL {
     String wheres = "";
     String orders = "";
     String table = "";
+    String joins = "";
     
     public SQL(String database) {
         try {
@@ -66,9 +67,18 @@ public class SQL {
         return this;
     }
     
+    public SQL leftJoin(String table, String firstCol, String cmp, String secondCol) {
+        this.joins += " LEFT JOIN " + table + " ON " + firstCol + " " + cmp + " " + secondCol;
+        return this;
+    }
+    
     public ResultSet get() throws SQLException {
         Statement statement = this.con.createStatement();
         String sql = "SELECT " + this.selects + " FROM " + this.table;
+        
+        if (this.joins.isEmpty() == false) {
+            sql = sql + this.joins;
+        }
         
         if (this.wheres.isEmpty() == false) {
             sql = sql + " WHERE " + this.wheres;
