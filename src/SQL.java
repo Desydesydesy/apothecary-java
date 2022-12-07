@@ -21,6 +21,7 @@ public class SQL {
     String orders = "";
     String table = "";
     String joins = "";
+    int limit = -1;
     
     public SQL(String database) {
         try {
@@ -86,6 +87,10 @@ public class SQL {
         if (this.orders.isEmpty() == false) {
             sql = sql + " ORDER BY " + this.orders;
         }
+                
+        if (this.limit != -1) {
+            sql = sql + " LIMIT " + limit;
+        }
         
         return sql;
     }
@@ -100,5 +105,25 @@ public class SQL {
     
     public String toSql() {
         return combineQuery();
+    }
+    
+    public SQL limit(int n) {
+        this.limit = n;
+        
+        return this;
+    }
+    
+    public ResultSet create(String[] columns, String[] values) throws SQLException {
+        Statement statement = this.con.createStatement();
+        String sql = "INSERT INTO " + table
+                + "(" + String.join(",", columns)
+                + ") VALUES (" + String.join(",", values) + ")";
+        
+        statement.executeUpdate(sql);
+        
+        return this
+                .orderBy(new String[] {"id"}, "desc")
+                .limit(1)
+                .get();
     }
 }

@@ -14,7 +14,7 @@ public class Home extends javax.swing.JFrame {
 
     private DefaultTableModel model = null;
 
-    private SQL makeQuery() {
+    public static SQL makeQuery() {
         return new SQL("database.db");
     }
 
@@ -30,7 +30,7 @@ public class Home extends javax.swing.JFrame {
         resources.addItem("Receipts");
     }
 
-    public void loadEmployees() {
+    public DefaultTableModel loadEmployees() {
         try {
             var query = makeQuery()
                     .table("employees");
@@ -53,13 +53,14 @@ public class Home extends javax.swing.JFrame {
                 });
             }
 
-            table.setModel(model);
+            return model;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return null;
         }
     }
 
-    public void loadProducts() {
+    public DefaultTableModel loadProducts() {
         try {
             var query = makeQuery()
                     .table("products")
@@ -76,6 +77,7 @@ public class Home extends javax.swing.JFrame {
 
             model = new DefaultTableModel();
 
+            model.addColumn("ИД");
             model.addColumn("Име");
             model.addColumn("Цена");
             model.addColumn("Отстъпка");
@@ -84,6 +86,7 @@ public class Home extends javax.swing.JFrame {
 
             while (result.next()) {
                 model.addRow(new Object[]{
+                    result.getString("id"),
                     result.getString("name"),
                     result.getString("price"),
                     result.getString("discount"),
@@ -91,23 +94,24 @@ public class Home extends javax.swing.JFrame {
                     result.getString("expires_at"),});
             }
 
-            table.setModel(model);
+            return model;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return null;
         }
     }
 
-    public void loadDeliveries() {
+    public DefaultTableModel loadDeliveries() {
         try {
             var query = makeQuery()
                     .table("deliveries")
                     .select(new String[]{
-                        "delivery_id",
-                        "`from`",
-                        "created_at",
-                        "products.name AS product_name",
-                        "products.quantity AS quantity"
-                    })
+                "delivery_id",
+                "`from`",
+                "created_at",
+                "products.name AS product_name",
+                "products.quantity AS quantity"
+            })
                     .leftJoin(
                             "delivery_products",
                             "delivery_products.delivery_id",
@@ -142,9 +146,10 @@ public class Home extends javax.swing.JFrame {
                     result.getString("quantity"),});
             }
 
-            table.setModel(model);
+            return model;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return null;
         }
     }
 
@@ -164,6 +169,9 @@ public class Home extends javax.swing.JFrame {
         search = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         btnSearch = new javax.swing.JButton();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        newOrder = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -200,6 +208,20 @@ public class Home extends javax.swing.JFrame {
 
         btnSearch.setText("Търси");
 
+        jMenu1.setText("Поръчки");
+
+        newOrder.setText("Нова Поръчка");
+        newOrder.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                newOrderActionPerformed(evt);
+            }
+        });
+        jMenu1.add(newOrder);
+
+        jMenuBar1.add(jMenu1);
+
+        setJMenuBar(jMenuBar1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -231,7 +253,7 @@ public class Home extends javax.swing.JFrame {
                     .addComponent(resources, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(search, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnSearch))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 23, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -241,16 +263,21 @@ public class Home extends javax.swing.JFrame {
     private void resourcesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resourcesActionPerformed
         switch ((String) resources.getSelectedItem()) {
             case "Employees":
-                loadEmployees();
+                table.setModel(loadEmployees());
                 break;
             case "Products":
-                loadProducts();
+                table.setModel(loadProducts());
                 break;
             case "Deliveries":
-                loadDeliveries();
+                table.setModel(loadDeliveries());
                 break;
         }
     }//GEN-LAST:event_resourcesActionPerformed
+
+    private void newOrderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newOrderActionPerformed
+        var form = new CreateOrder();
+        form.setVisible(true);
+    }//GEN-LAST:event_newOrderActionPerformed
 
     /**
      * @param args the command line arguments
@@ -292,7 +319,10 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JButton btnSearch;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JMenuItem newOrder;
     private javax.swing.JComboBox<String> resources;
     private javax.swing.JTextField search;
     private javax.swing.JTable table;
