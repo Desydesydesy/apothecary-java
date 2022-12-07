@@ -30,9 +30,12 @@ public class Home extends javax.swing.JFrame {
     
     public void loadEmployees() {
         try {
-            var result = db
-                    .table("employees")
-                    .get();
+            var query = db
+                    .table("employees");
+            
+            System.out.println(query.toSql());
+            
+            var result = query.get();
             
             model = new DefaultTableModel();
             
@@ -56,15 +59,19 @@ public class Home extends javax.swing.JFrame {
     
     public void loadProducts() {
         try {            
-            var result = db
+            var query = db
                     .table("products")
                     .leftJoin(
                             "discounts", 
                             "products.id", 
                             "=", 
                             "discounts.product_id"
-                    )
-                    .get();
+                    );
+            
+            System.out.println(query.toSql());
+            
+            var result = query.get();
+
             
             model = new DefaultTableModel();
             

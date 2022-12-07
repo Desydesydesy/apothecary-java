@@ -72,8 +72,7 @@ public class SQL {
         return this;
     }
     
-    public ResultSet get() throws SQLException {
-        Statement statement = this.con.createStatement();
+    private String combineQuery() {
         String sql = "SELECT " + this.selects + " FROM " + this.table;
         
         if (this.joins.isEmpty() == false) {
@@ -87,8 +86,19 @@ public class SQL {
         if (this.orders.isEmpty() == false) {
             sql = sql + " ORDER BY " + this.orders;
         }
+        
+        return sql;
+    }
+    
+    public ResultSet get() throws SQLException {
+        Statement statement = this.con.createStatement();
+        String sql = combineQuery();
 
         ResultSet result = statement.executeQuery(sql);
         return result;
+    }
+    
+    public String toSql() {
+        return combineQuery();
     }
 }
