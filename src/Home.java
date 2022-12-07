@@ -6,127 +6,142 @@ import javax.swing.table.DefaultTableModel;
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-
 /**
  *
  * @author Desi
  */
 public class Home extends javax.swing.JFrame {
-    private SQL db = null;
+
     private DefaultTableModel model = null;
-    
+
+    private SQL makeQuery() {
+        return new SQL("database.db");
+    }
+
     /**
      * Creates new form NewJFrame
      */
     public Home() {
-        db = new SQL("database.db");
         initComponents();
-        
+
         resources.addItem("Employees");
         resources.addItem("Products");
         resources.addItem("Deliveries");
         resources.addItem("Receipts");
     }
-    
+
     public void loadEmployees() {
         try {
-            var query = db
+            var query = makeQuery()
                     .table("employees");
-            
+
             System.out.println(query.toSql());
-            
+
             var result = query.get();
-            
+
             model = new DefaultTableModel();
-            
+
             model.addColumn("Име");
             model.addColumn("Фамилия");
             model.addColumn("Адрес");
-            
+
             while (result.next()) {
-                model.addRow(new Object[] {
-                        result.getString("first_name"),
-                        result.getString("last_name"),
-                        result.getString("address")
+                model.addRow(new Object[]{
+                    result.getString("first_name"),
+                    result.getString("last_name"),
+                    result.getString("address")
                 });
             }
-            
+
             table.setModel(model);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
-    
+
     public void loadProducts() {
-        try {            
-            var query = db
+        try {
+            var query = makeQuery()
                     .table("products")
                     .leftJoin(
-                            "discounts", 
-                            "products.id", 
-                            "=", 
+                            "discounts",
+                            "products.id",
+                            "=",
                             "discounts.product_id"
                     );
-            
+
             System.out.println(query.toSql());
-            
+
             var result = query.get();
 
-            
             model = new DefaultTableModel();
-            
+
             model.addColumn("Име");
             model.addColumn("Цена");
             model.addColumn("Отстъпка");
             model.addColumn("Количество");
             model.addColumn("Дата на изтичане");
-            
+
             while (result.next()) {
-                model.addRow(new Object[] {
-                        result.getString("name"),
-                        result.getString("price"),
-                        result.getString("discount"),
-                        result.getString("quantity"),
-                        result.getString("expires_at"),
-                });
+                model.addRow(new Object[]{
+                    result.getString("name"),
+                    result.getString("price"),
+                    result.getString("discount"),
+                    result.getString("quantity"),
+                    result.getString("expires_at"),});
             }
-            
+
             table.setModel(model);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
-    
+
     public void loadDeliveries() {
-        try {            
-            var result = db
+        try {
+            var query = makeQuery()
                     .table("deliveries")
+                    .select(new String[]{
+                        "delivery_id",
+                        "`from`",
+                        "created_at",
+                        "products.name AS product_name",
+                        "products.quantity AS quantity"
+                    })
                     .leftJoin(
-                            "discounts", 
-                            "products.id", 
-                            "=", 
-                            "discounts.product_id"
+                            "delivery_products",
+                            "delivery_products.delivery_id",
+                            "=",
+                            "deliveries.id"
                     )
-                    .get();
-            
+                    .leftJoin(
+                            "products",
+                            "products.id",
+                            "=",
+                            "delivery_products.product_id"
+                    );
+
+            System.out.println(query.toSql());
+
+            var result = query.get();
+
             model = new DefaultTableModel();
-            
-            model.addColumn("Име");
-            model.addColumn("Цена");
-            model.addColumn("Отстъпка");
+
+            model.addColumn("ИД Доставка");
+            model.addColumn("Доставчик");
+            model.addColumn("Дата на Доставка");
+            model.addColumn("Продукт");
             model.addColumn("Количество");
-            model.addColumn("Дата на изтичане");
-            
+
             while (result.next()) {
-                model.addRow(new Object[] {
-                        result.getString("name"),
-                        result.getString("price"),
-                        result.getString("discount"),
-                        result.getString("quantity"),
-                        result.getString("expires_at"),
-                });
+                model.addRow(new Object[]{
+                    result.getString("delivery_id"),
+                    result.getString("from"),
+                    result.getString("created_at"),
+                    result.getString("product_name"),
+                    result.getString("quantity"),});
             }
-            
+
             table.setModel(model);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -230,6 +245,9 @@ public class Home extends javax.swing.JFrame {
                 break;
             case "Products":
                 loadProducts();
+                break;
+            case "Deliveries":
+                loadDeliveries();
                 break;
         }
     }//GEN-LAST:event_resourcesActionPerformed
