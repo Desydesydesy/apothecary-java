@@ -15,7 +15,7 @@ import java.sql.Statement;
  * @author Desi
  */
 public class SQL {
-    Connection con = null;
+    private static Connection con = null;
     String selects = "*";
     String wheres = "";
     String orders = "";
@@ -24,6 +24,10 @@ public class SQL {
     int limit = -1;
     
     public SQL(String database) {
+        if (this.con != null) {
+            return;
+        }
+        
         try {
             // db parameters
             String url = "jdbc:sqlite:" + database;
@@ -100,6 +104,7 @@ public class SQL {
         String sql = combineQuery();
 
         ResultSet result = statement.executeQuery(sql);
+        
         return result;
     }
     
@@ -125,5 +130,22 @@ public class SQL {
                 .orderBy(new String[] {"id"}, "desc")
                 .limit(1)
                 .get();
+    }
+    
+    public void insert(String[] columns, String[][] values) throws SQLException {
+        Statement statement = this.con.createStatement();
+        String sql = "INSERT INTO " + table
+                + "(" + String.join(",", columns)
+                + ") VALUES ";
+        
+        for (int i = 0; i < values.length; i++) {
+            sql += "(" + String.join(",", values[i]) + ") ";
+            
+            if (i != values.length - 1) {
+                sql += ",";
+            }
+        }
+        
+        statement.executeUpdate(sql);
     }
 }

@@ -2,6 +2,7 @@
 import java.sql.SQLException;
 import javax.swing.JFrame;
 import javax.swing.table.DefaultTableModel;
+import java.time.LocalDate;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -192,15 +193,72 @@ public class CreateOrder extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnRemoveActionPerformed
 
+    public int findPriceColumn() {
+        var model = (DefaultTableModel) cart.getModel();
+
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            if (model.getColumnName(i).equals("Цена")) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int findQuantityColumn() {
+        var model = (DefaultTableModel) cart.getModel();
+
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            if (model.getColumnName(i).equals("Количество")) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public int cartTotal() {
+        int total = 0;
+        var items = (DefaultTableModel) cart.getModel();
+        int priceColumnIndex = findPriceColumn();
+        int quantityColumnIndex = findQuantityColumn();
+
+        for (int i = 0; i < items.getRowCount(); i++) {
+            int itemPrice = Integer.parseInt(items.getValueAt(i, priceColumnIndex).toString());
+            int itemQuantity = Integer.parseInt(items.getValueAt(i, quantityColumnIndex).toString());
+
+            total += itemPrice * itemQuantity;
+        }
+
+        return total;
+    }
+
     private void btnCheckoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCheckoutActionPerformed
         try {
+            String total = Integer.toString(cartTotal());
+            String createdAt = "'" + LocalDate.now().toString() + "'";
+
             var result = Home.makeQuery()
                     .table("receipts")
-                    .create(new String[]{"total", "created_at"}, new String[]{"125", "'2022-12-08'"});
+                    .create(new String[]{"total", "created_at"}, new String[]{total, createdAt});
 
-            int id = result.getInt("id");
+            String id = result.getString("id");
+
+            var model = (DefaultTableModel) cart.getModel();
+            int quantityColumnIndex = findQuantityColumn();
+            String[][] values = new String[cart.getRowCount()][3];
             
-            System.out.println(id);
+            for (int i = 0; i < cart.getRowCount(); i++) {
+                String productId = model.getValueAt(i, 0).toString();
+                String quantity = model.getValueAt(i, quantityColumnIndex).toString();
+                                
+                values[i] = new String[]{ id, productId, quantity };
+            }
+            
+            Home.makeQuery()
+                    .table("receipt_products")
+                    .insert(new String[]{"receipt_id", "product_id", "quantity"}, values);
+            
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             System.out.println(e.getCause());
